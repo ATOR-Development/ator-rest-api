@@ -1,0 +1,32 @@
+{
+  "name": "airtor-rest-api",
+  "version": "0.0.1",
+  "author": "Jim Toth <jim@artby.city>",
+  "license": "AGPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Airtor-Development/airtor-rest-api"
+  },
+  "scripts": {
+    "build": "rimraf dist && tsc --declaration",
+    "start": "node ./dist",
+    "dev": "concurrently \"tsc -w --declaration\" \"nodemon --watch ./dist/ --exec npm run start\"",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@koa/router": "^12.0.0",
+    "dotenv": "^16.0.3",
+    "inversify": "^6.0.1",
+    "koa": "^2.14.1",
+    "reflect-metadata": "^0.1.13",
+    "typescript": "^4.9.5"
+  },
+  "devDependencies": {
+    "@types/koa": "^2.13.5",
+    "@types/koa__router": "^12.0.0",
+    "concurrently": "^7.6.0",
+    "nodemon": "^2.0.21",
+    "rimraf": "^4.4.0",
+    "ts-node": "^10.9.1"
+  }
+}
