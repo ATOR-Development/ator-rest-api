@@ -2,6 +2,22 @@ import 'dotenv/config'
 import Koa from 'koa'
 import Router from '@koa/router'
 import { Server } from 'http'
+import bodyParser from 'koa-bodyparser'
+
+import { UsersRouter } from './interface/router'
+
+export interface AuthState {
+  address: string
+}
+export type State = Koa.DefaultState & {
+  auth?: AuthState
+}
+export type Context = Koa.DefaultContext & {}
+export type ParameterizedContext = Koa.ParameterizedContext<
+  State,
+  Context & Router.RouterParamContext<State, Context>,
+  unknown
+>
 
 export default class AirTorProtocolRestApi {
   private port: number = 1987
@@ -15,6 +31,14 @@ export default class AirTorProtocolRestApi {
   private build() {
     const router = new Router()
 
+    const usersRouter = new UsersRouter()
+    
+    router.use(
+      '/users',
+      usersRouter.router.routes(),
+      usersRouter.router.allowedMethods()
+    )
+
     router.get('/healthcheck', async (ctx) => {
       ctx.status = 200
       ctx.body = 'OK'
@@ -25,9 +49,12 @@ export default class AirTorProtocolRestApi {
     this.app
       .use(async (ctx, next) => {
         ctx.set('Access-Control-Allow-Origin', '*')
+        ctx.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+        ctx.set('Access-Control-Allow-Methods', '*')
 
         await next()
       })
+      .use(bodyParser())
       .use(router.routes())
       .use(router.allowedMethods())
   }
@@ -43,6 +70,7 @@ export default class AirTorProtocolRestApi {
   async stop() {
     if (this.server) {
       this.server.close(() => console.log('AirTor Protocol REST API stopped'))
+      process.exit()
     }
   }
 }
