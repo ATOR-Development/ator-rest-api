@@ -15,15 +15,16 @@ export default async (
   const message = ctx.request.body as any
 
   let signatureIsValid = false
+  let verifiedAddress
   if (signature && address) {
     try {
-      const verifiedAddress = verifyMessage(JSON.stringify(message), signature)
-      signatureIsValid = verifiedAddress.toUpperCase() === address.toUpperCase()
+      verifiedAddress = verifyMessage(JSON.stringify(message), signature)
+      signatureIsValid = verifiedAddress === address
     } catch (error) {}
   }
 
-  if (signatureIsValid && address) {
-    ctx.state.auth = { address }
+  if (signatureIsValid && verifiedAddress) {
+    ctx.state.auth = { address: verifiedAddress }
     
     await next()
   } else {

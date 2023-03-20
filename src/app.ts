@@ -4,7 +4,7 @@ import Router from '@koa/router'
 import { Server } from 'http'
 import bodyParser from 'koa-bodyparser'
 
-import { UsersRouter } from './interface/router'
+import { RelaysRouter } from './interface/router'
 
 export interface AuthState {
   address: string
@@ -13,11 +13,17 @@ export type State = Koa.DefaultState & {
   auth?: AuthState
 }
 export type Context = Koa.DefaultContext & {}
+export interface AuthorizedState extends State {
+  auth: AuthState
+}
 export type ParameterizedContext = Koa.ParameterizedContext<
   State,
   Context & Router.RouterParamContext<State, Context>,
   unknown
 >
+export interface AuthorizedContext extends ParameterizedContext {
+  state: AuthorizedState
+}
 
 export default class AirTorProtocolRestApi {
   private port: number = 1987
@@ -31,12 +37,12 @@ export default class AirTorProtocolRestApi {
   private build() {
     const router = new Router()
 
-    const usersRouter = new UsersRouter()
+    const relaysRouter = new RelaysRouter()
     
     router.use(
-      '/users',
-      usersRouter.router.routes(),
-      usersRouter.router.allowedMethods()
+      '/relays',
+      relaysRouter.router.routes(),
+      relaysRouter.router.allowedMethods()
     )
 
     router.get('/healthcheck', async (ctx) => {
