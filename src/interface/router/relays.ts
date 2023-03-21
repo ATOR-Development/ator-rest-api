@@ -2,11 +2,16 @@ import Router from '@koa/router'
 import { requireSignature } from '../middleware/index'
 
 import { AuthorizedContext, Context, State } from '../../app'
+import {
+  RegisterRelayRequest,
+  RelaysAppService,
+  RelaysRequestInvalidError
+} from '../../app-service'
 
-export class RelaysRouter {
+export default class RelaysRouter {
   router: Router<State, Context> = new Router<State, Context>()
 
-  constructor() {
+  constructor(private relaysAppService: RelaysAppService) {
     this.build()
   }
 
@@ -14,17 +19,33 @@ export class RelaysRouter {
     this.router.post('/', requireSignature, this.register.bind(this))
   }
 
-  private async register(ctx: AuthorizedContext) {
-    console.log('POST /relays', ctx.state.auth, ctx.request.body)
-    
-    const { address } = ctx.state.auth
+  private async register(
+    ctx: AuthorizedContext<Partial<RegisterRelayRequest>>
+  ) {
+    const { address, signature } = ctx.state.auth
 
-    // TODO -> Validate request
+    try {
+      const relay = await this.relaysAppService.register(
+        address,
+        signature,
+        ctx.request.body
+      )
+      ctx.status = 200
+      ctx.body = relay
 
-    // TODO -> relay application service -> register relay
+      return
+    } catch (error) {
+      if (error instanceof RelaysRequestInvalidError) {
+        ctx.status = error.status
+        ctx.body = error.message
 
-    ctx.status = 200
+        return
+      }
 
-    return
+      console.error(error)
+      ctx.status = 500
+      
+      return
+    }
   }
 }

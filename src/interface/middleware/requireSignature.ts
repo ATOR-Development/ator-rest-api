@@ -23,8 +23,8 @@ export default async (
     } catch (error) {}
   }
 
-  if (signatureIsValid && verifiedAddress) {
-    ctx.state.auth = { address: verifiedAddress }
+  if (signature && signatureIsValid && verifiedAddress) {
+    ctx.state.auth = { address: verifiedAddress, signature }
     
     await next()
   } else {

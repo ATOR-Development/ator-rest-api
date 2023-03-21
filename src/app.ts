@@ -1,27 +1,37 @@
 import 'dotenv/config'
-import Koa from 'koa'
+import Koa, { Request } from 'koa'
 import Router from '@koa/router'
 import { Server } from 'http'
 import bodyParser from 'koa-bodyparser'
 
 import { RelaysRouter } from './interface/router'
+import { RelaysAppService, RequestsAppService, UsersAppService } from './app-service'
+import { RelaysRepository, RequestsRepository, UsersRepository } from './service/repository'
+import { getDb } from './infra'
 
 export interface AuthState {
   address: string
+  signature: string
 }
 export type State = Koa.DefaultState & {
   auth?: AuthState
 }
-export type Context = Koa.DefaultContext & {}
+export type Context = Koa.DefaultContext & {
+  request: { body: any }
+}
 export interface AuthorizedState extends State {
   auth: AuthState
+  signature: string
 }
 export type ParameterizedContext = Koa.ParameterizedContext<
   State,
   Context & Router.RouterParamContext<State, Context>,
   unknown
 >
-export interface AuthorizedContext extends ParameterizedContext {
+export interface AuthorizedContext<RequestBody = unknown>
+  extends ParameterizedContext
+{
+  request: Request & { body: RequestBody }
   state: AuthorizedState
 }
 
@@ -35,9 +45,19 @@ export default class AirTorProtocolRestApi {
   }
 
   private build() {
-    const router = new Router()
-
-    const relaysRouter = new RelaysRouter()
+    const router = new Router<State, Context>()
+    const db = getDb(process.env.DB_CONNECTION || 'No DB_CONNECTION set!')
+    const usersRepository = new UsersRepository(db)
+    const usersAppService = new UsersAppService(usersRepository)
+    const requestsRepository = new RequestsRepository(db)
+    const requestsAppService = new RequestsAppService(requestsRepository)
+    const relaysRepository = new RelaysRepository(db)
+    const relaysAppService = new RelaysAppService(
+      usersAppService,
+      requestsAppService,
+      relaysRepository
+    )
+    const relaysRouter = new RelaysRouter(relaysAppService)
     
     router.use(
       '/relays',
@@ -54,6 +74,7 @@ export default class AirTorProtocolRestApi {
 
     this.app
       .use(async (ctx, next) => {
+         // TODO -> restrict origin
         ctx.set('Access-Control-Allow-Origin', '*')
         ctx.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
         ctx.set('Access-Control-Allow-Methods', '*')
