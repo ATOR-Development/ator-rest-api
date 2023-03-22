@@ -1,12 +1,18 @@
 import { Knex } from 'knex'
 
-const schema = 'airtor' // TODO -> from config
+import { client, SCHEMA_NAME } from '../../../knexfile'
 
 export default class BaseRepository<EntityT extends {}> {
   protected tableName: string = 'base'
 
   protected get table() {
-    return this.db<EntityT>(this.tableName).withSchema(schema)
+    let table = this.db<EntityT>(this.tableName)
+
+    if (client === 'pg') {
+      table = table.withSchema(SCHEMA_NAME)
+    }
+
+    return table
   }
 
   constructor(protected db: Knex) {}

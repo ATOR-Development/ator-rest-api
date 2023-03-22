@@ -6,4 +6,7 @@ export type WithTimestamps = {
 }
 export type Timestamps = keyof WithTimestamps
 
-export default (connection: string) => knex({ client: 'pg', connection })
+export default (
+  client: string,
+  connection: string
+) => knex({ client, connection })

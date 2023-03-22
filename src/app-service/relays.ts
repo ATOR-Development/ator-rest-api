@@ -2,6 +2,7 @@ import { Relay, RelaysRepository } from '../service/repository'
 import { RequestsAppService, UsersAppService } from './'
 
 export type RegisterRelayRequest = {
+  protocol: 'airtor'
   method: 'register'
   address: string
   fingerprint: string
@@ -53,8 +54,12 @@ export default class RelaysAppService {
     signature: string,
     registerRelayRequest: Partial<RegisterRelayRequest>
   ): Promise<Relay> {
-  
-    if (relayRequestIsValid(authAddress, registerRelayRequest)) {
+    if (
+      RelaysAppService.relayRequestIsValid(
+        authAddress,
+        registerRelayRequest
+      )
+    ) {
       const { address, fingerprint } = registerRelayRequest
 
       await this.usersAppService.getOrCreate({ address })
@@ -80,5 +85,28 @@ export default class RelaysAppService {
     }
 
     throw new RelaysRequestInvalidError()
+  }
+
+  static relayRequestIsValid = (
+    authAddress: string,
+    request: Partial<RegisterRelayRequest>
+  ): request is RegisterRelayRequest => {
+    const { method, address, fingerprint } = request
+  
+    if (!method || method != 'register') {
+      throw new RelaysRequestInvalidError('Request must include method: register')
+    }
+  
+    if (!address || authAddress !== address) {
+      throw new RelaysRequestInvalidError('Request must include matching address')
+    }
+  
+    if (!fingerprint || !/[A-F0-9]{40}/.test(fingerprint)) {
+      throw new RelaysRequestInvalidError(
+        'Request must include valid fingerprint'
+      )
+    }
+  
+    return true
   }
 }

@@ -24,7 +24,9 @@
     "baseUrl": "./src",
     "outDir": "./dist",
     "types": [
-      "node"
+      "node",
+      "@types/mocha",
+      "@types/chai"
     ]
   },
   "include": [ "src" ],

@@ -1,26 +1,35 @@
 import { Knex } from 'knex'
 
-import { onUpdateTrigger, SCHEMA_NAME } from '../knexfile'
+import {
+  client,
+  db,
+  onUpdateTrigger,
+  SCHEMA_NAME,
+  sqlite3UUID
+} from '../knexfile'
 
 export async function up(knex: Knex): Promise<void> {
-  await knex.schema.withSchema(SCHEMA_NAME).createTable('requests', table => {
+  await db(knex).createTable('requests', async table => {
     table.uuid('id')
-      .unique()
       .notNullable()
       .primary()
-      .defaultTo(knex.raw('gen_random_uuid()'))
+      .defaultTo(
+        client === 'pg'
+          ? knex.raw('gen_random_uuid()')
+          : knex.raw(sqlite3UUID)
+      )
     table.string('address', 42)
       .notNullable()
       .references('address')
-      .inTable(`${SCHEMA_NAME}.users`)
+      .inTable(client === 'pg' ? `${SCHEMA_NAME}.users` : 'users')
     table.jsonb('request').notNullable()
     table.string('signature', 132).unique().notNullable()
     table.timestamps(true, true)
   })
 
-  await knex.schema.withSchema(SCHEMA_NAME).raw(onUpdateTrigger('requests'))
+  await db(knex).raw(onUpdateTrigger('requests'))
 }
 
 export async function down(knex: Knex): Promise<void> {
-  await knex.schema.withSchema(SCHEMA_NAME).dropTableIfExists('requests')
+  await db(knex).dropTableIfExists('requests')
 }

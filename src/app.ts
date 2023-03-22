@@ -46,7 +46,10 @@ export default class AirTorProtocolRestApi {
 
   private build() {
     const router = new Router<State, Context>()
-    const db = getDb(process.env.DB_CONNECTION || 'No DB_CONNECTION set!')
+    const db = getDb(
+      process.env.DB_CLIENT || 'No DB_CLIENT set!',
+      process.env.DB_CONNECTION || 'No DB_CONNECTION set!'
+    )
     const usersRepository = new UsersRepository(db)
     const usersAppService = new UsersAppService(usersRepository)
     const requestsRepository = new RequestsRepository(db)

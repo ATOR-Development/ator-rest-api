@@ -20,11 +20,15 @@ export default async (
     try {
       verifiedAddress = verifyMessage(JSON.stringify(message), signature)
       signatureIsValid = verifiedAddress === address
+        && /0x[a-f0-9]{130}/.test(signature)
     } catch (error) {}
   }
 
   if (signature && signatureIsValid && verifiedAddress) {
-    ctx.state.auth = { address: verifiedAddress, signature }
+    ctx.state.auth = {
+      address: verifiedAddress,
+      signature: signature.toLowerCase()
+    }
     
     await next()
   } else {

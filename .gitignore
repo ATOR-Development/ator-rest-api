@@ -9,3 +9,5 @@
 oclif.manifest.json
 *.log
 *.env
+*.db
+*.db-journal
